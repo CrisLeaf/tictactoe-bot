@@ -8,21 +8,21 @@
     <title>Tic Tac Toe</title>
 </head>
 <body>
-    <section>
-        <div class="game-container">
-            <div data-cell-index="0" class="cell"></div>
-            <div data-cell-index="1" class="cell"></div>
-            <div data-cell-index="2" class="cell"></div>
-            <div data-cell-index="3" class="cell"></div>
-            <div data-cell-index="4" class="cell"></div>
-            <div data-cell-index="5" class="cell"></div>
-            <div data-cell-index="6" class="cell"></div>
-            <div data-cell-index="7" class="cell"></div>
-            <div data-cell-index="8" class="cell"></div>
-        </div>
-        <h2 class="game-status"></h2>
-        <button class="game-restart">Restart Game</button>
-    </section>
+<section>
+    <h2 class="game-status">-</h2>
+    <div class="game-container">
+        <div data-cell-index="0" class="cell"></div>
+        <div data-cell-index="1" class="cell"></div>
+        <div data-cell-index="2" class="cell"></div>
+        <div data-cell-index="3" class="cell"></div>
+        <div data-cell-index="4" class="cell"></div>
+        <div data-cell-index="5" class="cell"></div>
+        <div data-cell-index="6" class="cell"></div>
+        <div data-cell-index="7" class="cell"></div>
+        <div data-cell-index="8" class="cell"></div>
+    </div>
+    <button class="game-restart">Restart Game</button>
+</section>
 
 <style>
     section {
@@ -31,25 +31,24 @@
     .game-container {
         display: grid;
         grid-template-columns: repeat(3, auto);
-        width: 306px;
-        margin: 10px auto;
+        width: 20em;
+        margin: 0.6em auto;
         color: blue;
     }
     .cell {
-        width: 100px;
-        height: 100px;
-        box-shadow: 1px 1px 1px 1px grey;
-        border: 2px solid black;
+        width: 1.8em;
+        height: 1.8em;
+        /* box-shadow: 1px 1px 1px 1px grey; */
+        border: 0.04em solid black;
         cursor: pointer;
-        line-height: 100px;
-        font-size: 60px;
+        line-height: 1.8em;
+        font-size: 3.7em;
     }
     .game-restart {
-        width: 200px;
-        height: 50px;
+        width: 12em;
+        height: 3em;
     }
 </style>
-
 <script>
     const statusDisplay = document.querySelector(".game-status");
 
@@ -76,34 +75,26 @@
     function handleCellPlayed(clickedCell, clickedCellIndex) {
         gameState[clickedCellIndex] = currentPlayer;
         clickedCell.innerHTML = currentPlayer;
+
+        handleResultValidation();
     };
 
     function handlePlayerChange() {
         currentPlayer = currentPlayer === "X" ? "O" : "X";
     };
 
-    function getAvailableMoves() {
-        var posibleMoves = []
+    async function handleBotMove(boardString) {
+        let response = await fetch(`https://ttt-cris-api.herokuapp.com/next?board=${boardString}` + "&piece=-1");
+        let data = await response.json();
+        let nextMove = await data["next-move"];
 
-        for (let i = 0; i < gameState.length; i++) {
-            if (gameState[i] == "") {
-                posibleMoves.push(i);
-            }
-        }
+        gameState[nextMove] = "O";
+        document.querySelector(`[data-cell-index="${nextMove}"]`).innerHTML = "O";
 
-        return posibleMoves;
-    }
-
-    function handleBotMove() {
-        posibleMoves = getAvailableMoves();
-        if (posibleMoves.length > 0) {
-            randomMove = posibleMoves[Math.floor(Math.random() * posibleMoves.length)];
-            gameState[randomMove] = "O";
-            document.querySelector(`[data-cell-index="${randomMove}"]`).innerHTML = "O";
-        }
+        handleResultValidation();
     };
 
-    function handleResultValidation(player) {
+    function handleResultValidation() {
         let roundWon = false;
 
         for (let i = 0; i <= 7; i++) {
@@ -113,10 +104,10 @@
             let b = gameState[winCondition[1]];
             let c = gameState[winCondition[2]];
 
-            if (a === '' || b === '' || c === '') {
+            if (a === "" || b === "" || c === "") {
                 continue;
             }
-            if (a === b && b === c) {
+            if (a == b && b == c) {
                 roundWon = true;
                 winner = a;
                 break
@@ -140,27 +131,25 @@
 
     function handleCellClick(clickedCellEvent) {
         const clickedCell = clickedCellEvent.target;
-        const clickedCellIndex = parseInt(clickedCell.getAttribute('data-cell-index'));
+        const clickedCellIndex = parseInt(clickedCell.getAttribute("data-cell-index"));
 
         if (gameState[clickedCellIndex] !== "" || !gameActive) {
             return;
         };
 
-        handleCellPlayed(clickedCell, clickedCellIndex)
-        handleResultValidation(true);
+        handleCellPlayed(clickedCell, clickedCellIndex);
 
-        handleBotMove();
-        handleResultValidation(false);
+        let boardString = getGameArray();
 
-        getGameArray();
+        handleBotMove(boardString);
     };
 
     function handleRestartGame() {
         gameActive = true;
         currentPlayer = "X";
         gameState = ["", "", "", "", "", "", "", "", ""];
-        document.querySelectorAll('.cell').forEach(cell => cell.innerHTML = "");
-        statusDisplay.innerHTML = "";
+        document.querySelectorAll(".cell").forEach(cell => cell.innerHTML = "");
+        statusDisplay.innerHTML = "-";
     };
 
     function getGameArray() {
@@ -175,13 +164,13 @@
                 outputString += "0";
             }
         }
-        console.log(outputString);
+        // console.log(outputString);
+        return outputString;
 
     }
 
-    document.querySelectorAll('.cell').forEach(cell => cell.addEventListener('click', handleCellClick));
-    document.querySelector('.game-restart').addEventListener('click', handleRestartGame);
+    document.querySelectorAll(".cell").forEach(cell => cell.addEventListener("click", handleCellClick));
+    document.querySelector(".game-restart").addEventListener("click", handleRestartGame);
 </script>
-
 </body>
 </html>
